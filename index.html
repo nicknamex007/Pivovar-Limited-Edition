@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="cs" class="dark">
+<html lang="cs">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,11 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        scada: { bg: '#d4d8df', card: '#e2e8f0', border: '#94a3b8', text: '#1e293b' }
+                        scada: {
+                            bg: '#d4d8df',      /* Světle šedé pozadí velínu */
+                            card: '#e2e8f0',     /* Pozadí plovoucích oken */
+                            border: '#94a3b8',   /* Rámečky */
+                            dark: '#1e293b',     /* Text */
+                        }
                     }
                 }
             }
@@ -19,108 +23,133 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-[#1a1d24] text-gray-100 font-sans select-none h-screen flex flex-col justify-between overflow-hidden">
+<body class="bg-scada-bg text-scada-dark font-sans select-none h-screen flex flex-col justify-between overflow-hidden">
 
-    <!-- HORNÍ LIŠTA (Programy a stav jako ve velínu) -->
-    <header class="bg-[#2a2e39] border-b border-gray-700 px-3 py-2 flex items-center justify-between text-xs">
-        <div class="flex items-center gap-2 overflow-x-auto">
-            <span class="text-gray-400 font-bold">Programy:</span>
-            <span class="bg-green-700 text-white px-2 py-0.5 rounded font-bold">P15</span>
-            <span class="bg-green-700 text-white px-2 py-0.5 rounded font-bold">P16</span>
-            <span class="bg-green-700 text-white px-2 py-0.5 rounded font-bold">P21</span>
-            <span class="text-gray-500 bg-gray-800 px-2 py-0.5 rounded">P23</span>
+    <!-- HORNÍ LIŠTA (Programy a stav jako na velínu) -->
+    <header class="bg-[#cbd5e1] border-b border-scada-border px-3 py-2 flex items-center justify-between text-xs shadow-sm">
+        <div class="flex items-center gap-1.5 overflow-x-auto">
+            <span class="text-gray-600 font-bold">Programy:</span>
+            <span class="bg-emerald-600 text-white px-2 py-0.5 rounded font-bold shadow-inner">P15</span>
+            <span class="bg-emerald-600 text-white px-2 py-0.5 rounded font-bold shadow-inner">P16</span>
+            <span class="bg-emerald-600 text-white px-2 py-0.5 rounded font-bold shadow-inner">P21</span>
+            <span class="text-gray-500 bg-gray-300 px-2 py-0.5 rounded">P23</span>
         </div>
-        <div class="text-amber-400 font-bold">Únětice 10,7%</div>
+        <div class="text-blue-900 font-extrabold">Únětice 10,7%</div>
     </header>
 
     <!-- HLAVNÍ OBSAH (SCADA Schéma varny) -->
     <main id="app-content" class="flex-1 overflow-y-auto relative p-3">
-        <!-- Zde se dynamicky načítají obrazovky -->
+        <!-- Zde se načítá obsah -->
     </main>
 
     <!-- SPODNÍ NAVIGACE -->
-    <nav class="h-16 bg-[#2a2e39] border-t border-gray-700 flex justify-around items-center z-50 shadow-2xl">
-        <button onclick="zmenZalozku('varna')" id="nav-varna" class="flex flex-col items-center text-amber-400 transition py-1 px-3">
+    <nav class="h-16 bg-[#cbd5e1] border-t border-scada-border flex justify-around items-center z-50 shadow-md">
+        <button onclick="zmenZalozku('varna')" id="nav-varna" class="flex flex-col items-center text-blue-900 transition py-1 px-3">
             <i class="fa-solid fa-industry text-lg"></i>
-            <span class="text-[10px] mt-1 font-medium">Velín / Schéma</span>
+            <span class="text-[10px] mt-1 font-bold">Velín / Schéma</span>
         </button>
-        <button onclick="zmenZalozku('receptury')" id="nav-receptury" class="flex flex-col items-center text-gray-400 transition py-1 px-3">
+        <button onclick="zmenZalozku('receptury')" id="nav-receptury" class="flex flex-col items-center text-gray-600 transition py-1 px-3">
             <i class="fa-solid fa-book text-lg"></i>
             <span class="text-[10px] mt-1 font-medium">Receptury</span>
         </button>
-        <button onclick="zmenZalozku('sklad')" id="nav-sklad" class="flex flex-col items-center text-gray-400 transition py-1 px-3">
+        <button onclick="zmenZalozku('sklad')" id="nav-sklad" class="flex flex-col items-center text-gray-600 transition py-1 px-3">
             <i class="fa-solid fa-warehouse text-lg"></i>
             <span class="text-[10px] mt-1 font-medium">Sklad</span>
         </button>
-        <button onclick="zmenZalozku('archiv')" id="nav-archiv" class="flex flex-col items-center text-gray-400 transition py-1 px-3">
+        <button onclick="zmenZalozku('archiv')" id="nav-archiv" class="flex flex-col items-center text-gray-600 transition py-1 px-3">
             <i class="fa-solid fa-chart-line text-lg"></i>
             <span class="text-[10px] mt-1 font-medium">Archiv</span>
         </button>
     </nav>
 
     <script>
+        // Stav akčních členů pro interaktivní tlačítka
+        let stavCerpadla = true;
+        let teplotaVystirka = 52.1;
+        let teplotaRmut = 64.8;
+
+        function prepniCerpadlo() {
+            stavCerpadla = !stavCerpadla;
+            zmenZalozku('varna');
+        }
+
         const obrazovky = {
             varna: `
-                <div class="flex flex-col space-y-4 max-w-lg mx-auto pb-6">
+                <div class="flex flex-col space-y-3 max-w-lg mx-auto pb-8">
                     
                     <!-- 1. NÁDRŽ: Vystírací kád -->
-                    <div class="bg-[#222631] border border-gray-700 rounded-xl p-3 relative shadow-xl">
-                        <!-- Plovoucí okno nad nádobou (přesně jako na velínu) -->
-                        <div class="bg-[#e2e8f0] text-[#1e293b] rounded-lg p-2.5 mb-3 shadow border-t-4 border-green-600">
-                            <div class="flex justify-between items-center mb-1 font-bold text-xs bg-green-200 px-2 py-0.5 rounded">
+                    <div class="bg-[#e9edf2] border-2 border-scada-border rounded-xl p-3 relative shadow-md">
+                        <!-- Plovoucí okno nad nádobou -->
+                        <div class="bg-white text-scada-dark rounded-lg p-2.5 mb-3 shadow-sm border-t-4 border-emerald-600">
+                            <div class="flex justify-between items-center mb-1.5 font-bold text-xs bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded">
                                 <span>P15 - Vystírací kád</span>
-                                <span class="text-green-800">OK</span>
+                                <span class="bg-emerald-600 text-white px-1.5 py-0.2 rounded text-[10px]">OK</span>
                             </div>
                             <div class="grid grid-cols-2 gap-2 text-[11px]">
-                                <div>Čekání na RØ: <b class="text-blue-900">20</b></div>
-                                <div>Únětice 10,7%</div>
-                                <div>Zbytek čas: <b class="text-red-700">1:1</b></div>
-                                <div>Šarže: 608</div>
+                                <div>Čekání na RØ: <b class="text-blue-800">20</b></div>
+                                <div>Šarže: <b>608</b></div>
+                                <div>Zbytek čas: <b class="text-red-600">1:1</b></div>
+                                <div>Materiál: Slady</div>
                             </div>
                         </div>
 
-                        <!-- Vizuální nákres nádoby -->
-                        <div class="h-36 border-2 border-dashed border-gray-600 rounded-lg relative flex items-center justify-center bg-[#181b22]">
-                            <div class="text-gray-500 font-bold text-xs tracking-wider">VYSTÍRACÍ KÁD</div>
-                            <!-- Teploměr / Indikace -->
-                            <div class="absolute bottom-2 bg-gray-900 border border-gray-600 px-3 py-1 rounded text-xs font-bold text-green-400">
-                                52.1 °C
+                        <!-- Vizuální nákres nádoby s potrubím -->
+                        <div class="h-32 border-2 border-gray-400 bg-white rounded-lg relative flex items-center justify-center shadow-inner">
+                            <div class="absolute top-2 left-2 text-[10px] font-bold text-gray-400 uppercase">Vystírací kád</div>
+                            
+                            <!-- Indikace teploty -->
+                            <div class="bg-gray-100 border border-gray-300 px-3 py-1 rounded shadow text-xs font-extrabold text-emerald-700 flex items-center gap-1">
+                                <i class="fa-solid fa-temperature-half"></i> ${teplotaVystirka} °C
                             </div>
+
+                            <!-- Výstupní potrubí dole -->
+                            <div class="absolute bottom-0 w-3 h-4 bg-blue-500"></div>
                         </div>
                     </div>
 
-                    <!-- PROPOJCOVÉ POTRUBÍ S ČERPADLEM -->
-                    <div class="flex items-center justify-center gap-3 py-1">
-                        <div class="h-1 flex-1 bg-blue-500/50 rounded"></div>
-                        <div class="bg-blue-950 border border-blue-500 px-3 py-1 rounded-lg text-xs font-bold text-blue-400 flex items-center gap-1.5 shadow">
-                            <i class="fa-solid fa-water animate-pulse"></i> Čerpadlo (Aktivní)
+                    <!-- PROPOJCOVÉ POTRUBÍ S INTERAKTIVNÍM ČERPADLEM -->
+                    <div class="flex items-center justify-center gap-2 py-0.5">
+                        <div class="h-2 flex-1 bg-gray-400 rounded-full relative overflow-hidden">
+                            <div class="absolute inset-0 bg-blue-500 animate-pulse"></div>
                         </div>
-                        <div class="h-1 flex-1 bg-blue-500/50 rounded"></div>
+                        
+                        <!-- Interaktivní tlačítko čerpadla -->
+                        <button onclick="prepniCerpadlo()" class="px-3 py-1.5 rounded-lg text-xs font-bold shadow transition flex items-center gap-1.5 ${stavCerpadla ? 'bg-blue-600 text-white border border-blue-700' : 'bg-gray-300 text-gray-700 border border-gray-400'}">
+                            <i class="fa-solid fa-water"></i> Čerpadlo: ${stavCerpadla ? 'ZAP' : 'VYP'}
+                        </button>
+
+                        <div class="h-2 flex-1 bg-gray-400 rounded-full relative overflow-hidden">
+                            <div class="absolute inset-0 bg-blue-500 animate-pulse"></div>
+                        </div>
                     </div>
 
                     <!-- 2. NÁDRŽ: Rmutovací pánev -->
-                    <div class="bg-[#222631] border border-gray-700 rounded-xl p-3 relative shadow-xl">
+                    <div class="bg-[#e9edf2] border-2 border-scada-border rounded-xl p-3 relative shadow-md">
                         <!-- Plovoucí okno nad nádobou -->
-                        <div class="bg-[#e2e8f0] text-[#1e293b] rounded-lg p-2.5 mb-3 shadow border-t-4 border-green-600">
-                            <div class="flex justify-between items-center mb-1 font-bold text-xs bg-green-200 px-2 py-0.5 rounded">
+                        <div class="bg-white text-scada-dark rounded-lg p-2.5 mb-3 shadow-sm border-t-4 border-emerald-600">
+                            <div class="flex justify-between items-center mb-1.5 font-bold text-xs bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded">
                                 <span>P16 - Rmutovací pánev</span>
-                                <span class="text-green-800">OK</span>
+                                <span class="bg-emerald-600 text-white px-1.5 py-0.2 rounded text-[10px]">OK</span>
                             </div>
                             <div class="grid grid-cols-2 gap-2 text-[11px]">
-                                <div>Zcukření při 64°C: <b class="text-blue-900">10</b></div>
-                                <div>Únětice 10,7%</div>
-                                <div>Zbytek čas: <b class="text-red-700">52</b> min</div>
-                                <div>Šarže: 608</div>
+                                <div>Zcukření 64°C: <b class="text-blue-800">10</b></div>
+                                <div>Šarže: <b>608</b></div>
+                                <div>Zbytek čas: <b class="text-red-600">52</b> min</div>
+                                <div>Ohřev: 3x plotna</div>
                             </div>
                         </div>
 
-                        <!-- Vizuální nákres nádoby -->
-                        <div class="h-36 border-2 border-dashed border-gray-600 rounded-lg relative flex items-center justify-center bg-[#181b22]">
-                            <div class="text-gray-500 font-bold text-xs tracking-wider">RMUTOVACÍ PÁNEV</div>
-                            <!-- Teploměr / Indikace -->
-                            <div class="absolute bottom-2 bg-gray-900 border border-gray-600 px-3 py-1 rounded text-xs font-bold text-green-400">
-                                64.8 °C
+                        <!-- Vizuální nákres nádoby s potrubím -->
+                        <div class="h-32 border-2 border-gray-400 bg-white rounded-lg relative flex items-center justify-center shadow-inner">
+                            <div class="absolute top-2 left-2 text-[10px] font-bold text-gray-400 uppercase">Rmutovací pánev</div>
+                            
+                            <!-- Indikace teploty -->
+                            <div class="bg-gray-100 border border-gray-300 px-3 py-1 rounded shadow text-xs font-extrabold text-emerald-700 flex items-center gap-1">
+                                <i class="fa-solid fa-temperature-half"></i> ${teplotaRmut} °C
                             </div>
+
+                            <!-- Vstupní potrubí nahoře -->
+                            <div class="absolute top-0 w-3 h-4 bg-blue-500"></div>
                         </div>
                     </div>
 
@@ -128,31 +157,31 @@
             `,
             receptury: `
                 <div class="p-4 space-y-3 max-w-md mx-auto">
-                    <h2 class="text-base font-bold text-amber-400 mb-2">Receptury a kalkulačka</h2>
-                    <div class="bg-[#222631] border border-gray-700 p-4 rounded-xl">
-                        <div class="font-bold text-sm text-white">Únětice 10,7% (Světlé výčepní)</div>
-                        <div class="text-xs text-gray-400 mt-1">EPM: 10.7°P | IBU: 28 | EBC: 8 | ABV: 4.1%</div>
+                    <h2 class="text-base font-bold text-blue-900 mb-2">Receptury a kalkulačka</h2>
+                    <div class="bg-white border border-scada-border p-4 rounded-xl shadow-sm">
+                        <div class="font-bold text-sm text-gray-900">Únětice 10,7% (Světlé výčepní)</div>
+                        <div class="text-xs text-gray-600 mt-1">EPM: 10.7°P | IBU: 28 | EBC: 8 | ABV: 4.1%</div>
                     </div>
                 </div>
             `,
             sklad: `
                 <div class="p-4 space-y-3 max-w-md mx-auto">
-                    <h2 class="text-base font-bold text-amber-400 mb-2">Skladové hospodářství</h2>
-                    <div class="bg-[#222631] border border-gray-700 p-3.5 rounded-xl flex justify-between items-center">
+                    <h2 class="text-base font-bold text-blue-900 mb-2">Skladové hospodářství</h2>
+                    <div class="bg-white border border-scada-border p-3.5 rounded-xl flex justify-between items-center shadow-sm">
                         <div>
-                            <div class="font-bold text-sm text-white">Plzeňský slad</div>
-                            <div class="text-xs text-gray-400 mt-0.5">Zásoba: 25.5 kg (Min: 10 kg)</div>
+                            <div class="font-bold text-sm text-gray-900">Plzeňský slad</div>
+                            <div class="text-xs text-gray-600 mt-0.5">Zásoba: 25.5 kg (Min: 10 kg)</div>
                         </div>
-                        <i class="fa-solid fa-circle-check text-green-500 text-lg"></i>
+                        <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
                     </div>
                 </div>
             `,
             archiv: `
                 <div class="p-4 space-y-3 max-w-md mx-auto">
-                    <h2 class="text-base font-bold text-amber-400 mb-2">Archiv a grafy várek</h2>
-                    <div class="bg-[#222631] border border-gray-700 p-4 rounded-xl">
-                        <div class="font-bold text-sm text-white">Várka #608 (Únětice 10,7%)</div>
-                        <div class="text-xs text-gray-400 mt-1">Stav: Probíhá vaření (Rmutovací pánev)</div>
+                    <h2 class="text-base font-bold text-blue-900 mb-2">Archiv a grafy várek</h2>
+                    <div class="bg-white border border-scada-border p-4 rounded-xl shadow-sm">
+                        <div class="font-bold text-sm text-gray-900">Várka #608 (Únětice 10,7%)</div>
+                        <div class="text-xs text-gray-600 mt-1">Stav: Probíhá vaření (Rmutovací pánev)</div>
                     </div>
                 </div>
             `
@@ -163,11 +192,11 @@
             ['varna', 'receptury', 'sklad', 'archiv'].forEach(z => {
                 const btn = document.getElementById('nav-' + z);
                 if (z === nazev) {
-                    btn.classList.remove('text-gray-400');
-                    btn.classList.add('text-amber-400');
+                    btn.classList.remove('text-gray-600');
+                    btn.classList.add('text-blue-900', 'font-bold');
                 } else {
-                    btn.classList.remove('text-amber-400');
-                    btn.classList.add('text-gray-400');
+                    btn.classList.remove('text-blue-900', 'font-bold');
+                    btn.classList.add('text-gray-600');
                 }
             });
         }
