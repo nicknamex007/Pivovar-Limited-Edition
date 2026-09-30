@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="cs" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pivovarnická Aplikace</title>
+    <!-- Tailwind CSS pro moderní vzhled -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        industrial: { dark: '#121212', card: '#1E1E1E', border: '#2C2C2C', accent: '#D97706' }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Ikony -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-industrial-dark text-gray-100 font-sans select-none h-screen flex flex-col justify-between overflow-hidden">
+
+    <!-- HLAVNÍ OBSAH (Mění se podle záložky) -->
+    <main id="app-content" class="flex-1 overflow-y-auto relative">
+        <!-- ZDE SE NAČÍTÁ AKTIVNÍ OBRAZOVKA -->
+    </main>
+
+    <!-- SPODNÍ NAVIGACE (Fixní mobilní panel) -->
+    <nav class="h-16 bg-industrial-card border-t border-industrial-border flex justify-around items-center z-50">
+        <button onclick="zmenZalozku('varna')" id="nav-varna" class="flex flex-col items-center text-amber-500 transition">
+            <i class="fa-solid fa-fire text-xl"></i>
+            <span class="text-xs mt-1">Varna</span>
+        </button>
+        <button onclick="zmenZalozku('receptury')" id="nav-receptury" class="flex flex-col items-center text-gray-400 transition">
+            <i class="fa-solid fa-book text-xl"></i>
+            <span class="text-xs mt-1">Receptury</span>
+        </button>
+        <button onclick="zmenZalozku('sklad')" id="nav-sklad" class="flex flex-col items-center text-gray-400 transition">
+            <i class="fa-solid fa-warehouse text-xl"></i>
+            <span class="text-xs mt-1">Sklad</span>
+        </button>
+        <button onclick="zmenZalozku('archiv')" id="nav-archiv" class="flex flex-col items-center text-gray-400 transition">
+            <i class="fa-solid fa-chart-line text-xl"></i>
+            <span class="text-xs mt-1">Archiv</span>
+        </button>
+    </nav>
+
+    <!-- JAVASCRIPT LOGIKA -->
+    <script>
+        // Šablony pro jednotlivé obrazovky
+        const obrazovky = {
+            varna: `
+                <div class="relative w-full h-full flex items-center justify-center p-4 bg-industrial-dark">
+                    <!-- Fyzické schéma varny (Kotel) -->
+                    <div class="w-full max-w-sm h-[480px] border-2 border-industrial-border rounded-2xl bg-[#181818] relative flex flex-col items-center justify-between p-4 shadow-2xl">
+                        <div class="text-gray-500 font-bold tracking-widest text-sm mt-2">HLAVNÍ KOTEL</div>
+                        
+                        <!-- Míchadla nahoře -->
+                        <div class="w-full flex justify-around absolute top-6">
+                            <div class="bg-gray-800 border border-amber-600 px-3 py-1 rounded-lg text-xs font-bold text-amber-400 flex items-center gap-1 shadow">
+                                <i class="fa-solid fa-gear animate-spin"></i> Míchadlo 1 (75%)
+                            </div>
+                            <div class="bg-gray-800 border border-amber-600 px-3 py-1 rounded-lg text-xs font-bold text-amber-400 flex items-center gap-1 shadow">
+                                <i class="fa-solid fa-gear animate-spin"></i> Míchadlo 2 (50%)
+                            </div>
+                        </div>
+
+                        <!-- Topení a čerpadlo dole -->
+                        <div class="w-full flex justify-around absolute bottom-4 px-4">
+                            <div class="bg-red-950/60 border border-red-500 px-2 py-1 rounded text-[11px] font-bold text-red-400">Top 1 (Zap)</div>
+                            <div class="bg-gray-900 border border-gray-700 px-2 py-1 rounded text-[11px] font-bold text-gray-500">Top 2 (Vyp)</div>
+                            <div class="bg-gray-900 border border-gray-700 px-2 py-1 rounded text-[11px] font-bold text-gray-500">Top 3 (Vyp)</div>
+                        </div>
+                        <div class="absolute -bottom-3 bg-blue-950/80 border border-blue-500 px-3 py-1 rounded-lg text-xs font-bold text-blue-400">
+                            <i class="fa-solid fa-water"></i> Čerpadlo (Aktivní)
+                        </div>
+                    </div>
+
+                    <!-- Plovoucí programové okno (Floating Dashboard) -->
+                    <div class="absolute top-4 left-4 right-4 bg-industrial-card/90 backdrop-blur-md border border-industrial-border rounded-xl p-4 shadow-xl">
+                        <div class="flex justify-between items-center text-sm mb-1">
+                            <span class="font-bold text-amber-500">12° Světlý ležák (#2026-04)</span>
+                            <span class="text-gray-400 text-xs">Krok 2/5</span>
+                        </div>
+                        <div class="text-xs text-gray-300 mb-2">Pauza: Sacharifikační rmut (72°C)</div>
+                        <div class="flex justify-between items-center border-t border-industrial-border pt-2">
+                            <span class="text-green-400 font-bold text-sm">71.8°C / 72.0°C</span>
+                            <span class="font-bold text-sm">Zbývá: 18:45</span>
+                        </div>
+                    </div>
+                </div>
+            `,
+            receptury: `
+                <div class="p-4 space-y-4">
+                    <h2 class="text-lg font-bold text-amber-500">Receptury a kalkulačka</h2>
+                    <div class="bg-industrial-card border border-industrial-border p-4 rounded-xl">
+                        <div class="font-bold text-base">12° Světlý ležák (Plzeňský typ)</div>
+                        <div class="text-xs text-gray-400 mt-1">EPM: 12.2° | IBU: 38 | EBC: 9 | ABV: 4.8%</div>
+                    </div>
+                    <div class="bg-industrial-card border border-industrial-border p-4 rounded-xl">
+                        <div class="font-bold text-base">11° Tmavý ležák</div>
+                        <div class="text-xs text-gray-400 mt-1">EPM: 11.0° | IBU: 26 | EBC: 45 | ABV: 4.2%</div>
+                    </div>
+                </div>
+            `,
+            sklad: `
+                <div class="p-4 space-y-3">
+                    <h2 class="text-lg font-bold text-amber-500 mb-2">Skladové zásoby</h2>
+                    <div class="bg-industrial-card border border-industrial-border p-3 rounded-xl flex justify-between items-center">
+                        <div>
+                            <div class="font-bold text-sm">Plzeňský slad</div>
+                            <div class="text-xs text-gray-400">Zásoba: 25.5 kg (Min: 10 kg)</div>
+                        </div>
+                        <i class="fa-solid fa-circle-check text-green-500 text-lg"></i>
+                    </div>
+                    <div class="bg-industrial-card border border-industrial-border p-3 rounded-xl flex justify-between items-center">
+                        <div>
+                            <div class="font-bold text-sm">Žatecký červeňák (Chmel)</div>
+                            <div class="text-xs text-gray-400">Zásoba: 1.2 kg (Min: 0.5 kg)</div>
+                        </div>
+                        <i class="fa-solid fa-circle-check text-green-500 text-lg"></i>
+                    </div>
+                    <div class="bg-industrial-card border border-industrial-border p-3 rounded-xl flex justify-between items-center">
+                        <div>
+                            <div class="font-bold text-sm">Saflager W-34/70</div>
+                            <div class="text-xs text-red-400">Zásoba: 2 bal. (Min: 4 bal.) - CHYBÍ!</div>
+                        </div>
+                        <i class="fa-solid fa-triangle-exclamation text-red-500 text-lg"></i>
+                    </div>
+                </div>
+            `,
+            archiv: `
+                <div class="p-4 space-y-4">
+                    <h2 class="text-lg font-bold text-amber-500">Archiv várek</h2>
+                    <div class="bg-industrial-card border border-industrial-border p-4 rounded-xl">
+                        <div class="font-bold text-sm">Várka #2026-03 (12° Ležák)</div>
+                        <div class="text-xs text-gray-400 mt-1">Datum: 15.3.2026 | Dosažené OG: 12.3°P</div>
+                        <div class="mt-3 text-amber-500 text-xs font-bold cursor-pointer"><i class="fa-solid fa-chart-area"></i> Zobrazit graf průběhu teplot</div>
+                    </div>
+                </div>
+            `
+        };
+
+        // Funkce pro přepínání záložek
+        function zmenZalozku(nazev) {
+            // Vykreslení obsahu
+            document.getElementById('app-content').innerHTML = obrazovky[nazev];
+
+            // Barvy tlačítek v menu
+            ['varna', 'receptury', 'sklad', 'archiv'].forEach(z => {
+                const btn = document.getElementById('nav-' + z);
+                if (z === nazev) {
+                    btn.classList.remove('text-gray-400');
+                    btn.classList.add('text-amber-500');
+                } else {
+                    btn.classList.remove('text-amber-500');
+                    btn.classList.add('text-gray-400');
+                }
+            });
+        }
+
+        // Spuštění výchozí záložky po načtení
+        window.onload = () => zmenZalozku('varna');
+    </script>
+</body>
+</html>
